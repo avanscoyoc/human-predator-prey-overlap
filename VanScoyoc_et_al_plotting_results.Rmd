@@ -1,0 +1,119 @@
+---
+title: "VanScoyoc_et_al_plotting_results"
+output: github_document
+---
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+# Libraries
+
+library(here) #set local working directory
+library(tidyverse) #for data manipulation
+library(emmeans) #for calculating estimated marginal means
+library(multcomp) #for calculating CIs and tukey test
+library(multcompView) #for labeling with letters
+library(cowplot) #for joining plot panels
+```
+
+```{r include = FALSE}
+# Import data
+
+data <- read_csv(here("data", "VanScoyoc_et_al_fulldata.csv"))
+head(data)
+```
+
+```{r}
+# Tidy data for Figure2a
+
+fig2a_data <- data %>% #call dataset
+                dplyr::select(pair_ID, #select columns
+                              predator_low_normalized, prey_low_normalized,
+                              predator_high_normalized, prey_high_normalized) %>% 
+                pivot_longer(2:5) %>% #pivot data to long format for tidying human_activity level
+                separate(name,c("type","human_activity"), sep = "_") %>% #separate columns
+                pivot_wider(names_from = type, values_from = value) #pivot wide for plotting
+```
+
+```{r}
+# Fig 2a Plot
+
+# Behavioral response pathway labels for plot 
+plot_labels <- data.frame(name = c("Prey Switching", "Mutual Attraction", 
+                                   "Mutual Avoidance", "Prey Refuge"),
+                          x = c(-0.75, 0.75, -0.75, 0.75), 
+                          y = c(0.82, 0.82, -0.92, - 0.92)) 
+# Plot
+fig2a <- ggplot() +
+        #Add data
+            geom_line(data = fig2a_data, aes(x=prey, y=predator, #add lines grouped by pair_id 
+                                             group = pair_ID), color = "#3D3D3D") +
+            geom_point(data = fig2a_data, aes(x=prey, y=predator), alpha = 0.7) + #add points
+            geom_label(data = plot_labels, aes(x = x, y = y, label = name), #add pathway text
+                       size = 3.2, family="serif") +
+            labs(x = "Prey Activity Shift", y = "Predator Activity Shift") + #label axes
+        #Format plot
+            geom_vline(xintercept = 0) + #set x-axis line
+            geom_hline(yintercept = 0) + #set y-axis line
+            lims(x=c(-1,1),y=c(-1,1)) + #set axis limits
+            coord_fixed() + #fix plot dimensions
+            theme_light() + #set theme
+            theme(text=element_text(size=10, family="serif")) #set text size & font
+```
+
+```{r}
+# Tidy data for Figure2b
+
+fig2b_data <- data %>% #call dataset
+                dplyr::select(reference, pair_ID,  #select columns
+                              hypothesis, change_overlap) %>%
+                filter(!grepl('Neutral', hypothesis)) %>% #remove neutral response dyads (n = 6)
+                drop_na() #drop dyads without overlap values (2 studies, n = 9)
+```
+
+```{r}
+# Calculate confidence intervalse for Figure 2b
+
+model <- lm(change_overlap ~ hypothesis, data = fig2b_data) #set up model
+model_means <- emmeans(object = model, specs = "hypothesis") #get adjusted weight means per group
+model_means_cld <- cld(object = model_means, #add letters to each mean
+                       adjust = "Tukey", Letters = letters, alpha = 0.05)
+```
+
+```{r}
+# Fig 2b Plot 
+
+fig2b <- ggplot() +
+      #Add data
+          geom_point(data = fig2b_data, aes(y = change_overlap, x = hypothesis), #add points
+            shape = 16, alpha = 0.5, position = position_nudge(x = -0.2)) +
+          geom_boxplot(data = fig2b_data, aes(y = change_overlap, x = hypothesis), #add boxplot
+            width = 0.2, outlier.shape = NA, position = position_nudge(x = 0)) +
+          geom_point(data = model_means_cld, #add mean
+                     aes(y = emmean, x = hypothesis), size = 1, color = "maroon") +
+          geom_errorbar(data = model_means_cld, #add confidence intervals
+                        aes(ymin = lower.CL, ymax = upper.CL, x = hypothesis),
+                        width = 0.05, color = "maroon") +
+        #geom_text(data = model_means_cld, #add letters to plot
+                  #aes(y = emmean, x = hypothesis, label = str_trim(.group)),
+                  #position = position_nudge(x = 0.2), hjust = 0, color = "maroon", size = 3) +
+          labs(x = "", y = "Change in Overlap") + #label axes
+      #Format plot
+          geom_hline(yintercept = 0) + #set x-axis line
+          theme_light() + #set theme
+          theme(text=element_text(size=10, family="serif")) + #format axis text          
+          coord_flip() #flip plot orientation
+```
+
+```{r}
+# Combine Figure 2 plots
+
+figure2 <- plot_grid(fig2a, fig2b, labels = "AUTO", label_size = 12, #combine plots
+                    align = "h", axis = "b", nrow = 1, rel_widths = c(3,1.7))
+
+figure2
+```
+
+**Fig. 2.** *An analysis of human influence on predator-prey overlap. (a) Humans altered activity in mammal predator-prey dyads via four major pathways. Lines represent the relative magnitude and direction of diel activity shifts for each predator-prey dyad between paired sites of low and high human activity (n = 184 predator-prey dyads, 19 studies). (b) Predator-prey activity shifts did not alter temporal overlap between predator-prey dyads (n = 177 predator-prey dyads, 17 studies). Black dots represent change in temporal overlap for each dyad. Red error bars represent estimated marginal means and  ± 95% confidence interval.* 
