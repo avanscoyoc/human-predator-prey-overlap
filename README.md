@@ -9,8 +9,8 @@ University of California, Berkeley
 130 Mulford Hall, Berkeley, CA, USA 94720  
 avanscoyoc@berkeley.edu 
 
-Justine A. Smith 
-Department of Wildlife, Fish, & Conservation Biology  
+Justine A. Smith   
+Department of Wildlife, Fish, & Conservation Biology    
 University of California, Davis  
 455 Crocker Lane, Davis, CA, USA 95616   
 justinesmith@ucdavis.edu  
