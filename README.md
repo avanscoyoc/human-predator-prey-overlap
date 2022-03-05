@@ -1,4 +1,4 @@
-# R script, plots, and data used to assess how human activity influence predator-prey activity and overlap
+# R script, plots, and data used to assess how human activity influences predator-prey activity and overlap
 ##### Van Scoyoc, A., Smith, J.A., Gaynor, K.M, Barker, K., Brashares, J.S. In Prep. The influence of human activity on predator-prey interactions.
 
 ## **Authors**
