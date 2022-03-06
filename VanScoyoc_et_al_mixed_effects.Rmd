@@ -20,17 +20,9 @@ library(sjPlot) #for plotting linear model
 
 ```{r include = FALSE}
 # Import data
-data <- read_csv(here("data", "VanScoyoc_et_al_fulldata.csv"))
-```
+data <- read_csv(here("data", "VanScoyoc_et_al_data.csv"))
+head(data)
 
-```{r}
-# Load activity values
-orig <- read_csv(here("data", "orig_vals.csv")) %>% 
-          mutate(ID = paste0(study_name, pred_name, prey_name))
-# Create IDs
-data2 <- data %>% mutate(ID = paste0(reference, predator_common, prey_common))
-# Join activity values
-full_dat <- left_join(data2, orig, by = "ID")
 ```
 
 ```{r}
@@ -38,27 +30,26 @@ full_dat <- left_join(data2, orig, by = "ID")
 full_dat <- full_dat %>% 
         mutate(pr_change = ifelse(abs(pr_shift_diurnal) < 0.1 | abs(py_shift_dirunal) < 0.1, 
                                   "Not Significant", "Significant"), #note if shift is > 10%
-               new_hyp = ifelse(pr_shift_diurnal < 0 & py_shift_dirunal < 0, "Mutual Avoidance", 
-                          ifelse(pr_shift_diurnal > 0 & py_shift_dirunal > 0, "Mutual Attraction",
-                            ifelse(pr_shift_diurnal > 0 & py_shift_dirunal < 0, "Prey Switching",
-                              ifelse(pr_shift_diurnal < 0 & py_shift_dirunal > 0, "Prey Refuge", 
+               hypothesis = ifelse(pr_shift_diurnal < 0 & py_shift_diurnal < 0, "Mutual Avoidance", 
+                          ifelse(pr_shift_diurnal > 0 & py_shift_diurnal > 0, "Mutual Attraction",
+                            ifelse(pr_shift_diurnal > 0 & py_shift_diurnal < 0, "Prey Switching",
+                              ifelse(pr_shift_diurnal < 0 & py_shift_diurnal > 0, "Prey Refuge", 
                                      "Neutral")))))
 # Filter dataset
 filtered_dat <- full_dat %>% 
-        filter(new_hyp != "Neutral" & # remove neutral hypotheses
+        filter(hypothesis != "Neutral") # remove neutral hypotheses
                 #overlap_low >= 0.5 &  # filter to strong starting interaction 
                 #pr_change == "Significant" & # filter to > 10% shift
-                pr_low_D_count > 10 & pr_low_N_count > 10 & # filter to enough images predator
-                py_low_D_count > 10 & py_low_N_count > 10) # filter to enough images prey
+
 ```
 
 ```{r}
-# Run mixed effects model
-model <- lmer(change_overlap ~ new_hyp + (1|reference), data = filtered_dat)
+# Run mixed effects model on filtered data
+model <- lmer(change_overlap ~ hypothesis + (1|reference), data = filtered_dat)
 summary(model)
 
 # Plot
-ggplot(filtered_dat,aes(x=reference,y=change_overlap,color=new_hyp))+
+ggplot(filtered_dat,aes(x=reference,y=change_overlap,color=hypothesis))+
   geom_point()+ #add points
   geom_line()+ #add line
   geom_hline(yintercept = 0) + #set x-axis line
