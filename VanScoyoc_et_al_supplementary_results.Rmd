@@ -1,0 +1,171 @@
+---
+title: "VanScoyoc_et_al_supplementary_results"
+output: github_document
+---
+
+```{r}
+library(tidyverse) #for manipulating data
+library(here) #for setting reproducible working directory
+library(cowplot) #for combining plot panels
+```
+
+```{r include = FALSE}
+# Import data
+data <- read_csv(here("data", "VanScoyoc_et_al_data.csv"))
+head(data)
+colnames(data)
+```
+
+```{r}
+pred_prey <- data %>% 
+                dplyr::select(pr_high_relative, py_high_relative) %>% 
+                pivot_longer(1:2) %>% 
+                separate(name, into = c("type"), sep = "_", remove = TRUE) %>% 
+                group_by(type) %>% 
+                summarise(med_val = median(value), sd = sd(value), n = n()) %>% 
+                mutate(group = "Trophic position")
+
+bodysize_tbl <- data %>% 
+                  dplyr::select(pair_ID, predator_mass_category, prey_mass_category) %>% 
+                  pivot_longer(2:3, names_to = "name", values_to = "mass_category") %>% 
+                  separate(name, into = "name", sep = "_", remove = TRUE) %>% 
+                  mutate(ids = paste0(pair_ID,name)) %>% 
+                  dplyr::select(ids, type = mass_category)
+
+bodysize <- data %>% 
+                dplyr::select(pair_ID, pr_high_relative, py_high_relative) %>% 
+                pivot_longer(2:3) %>% 
+                separate(name, into = "name", sep = "_", remove = TRUE) %>% 
+                mutate(ids = paste0(pair_ID,name)) %>% 
+                left_join(bodysize_tbl, by = "ids", keep = FALSE) %>% 
+                dplyr::select(-ids) %>% 
+                group_by(type, name) %>% 
+                summarise(med_val = median(value), sd = sd(value), n = n()) %>% 
+                mutate(group = "Body mass")
+
+trophic_level_tbl <- data %>% 
+              dplyr::select(pair_ID, predator_trophic_level, prey_trophic_level) %>% 
+              pivot_longer(2:3, names_to = "name", values_to = "trophic_level") %>% 
+              separate(name, into = "name", sep = "_", remove = TRUE) %>% 
+              mutate(ids = paste0(pair_ID,name)) %>% 
+              dplyr::select(ids, type = trophic_level)
+  
+trophic_level <- data %>% 
+                  dplyr::select(pair_ID, pr_high_relative, py_high_relative) %>% 
+                  pivot_longer(2:3) %>% 
+                  separate(name, into = "name", sep = "_", remove = TRUE) %>% 
+                  mutate(ids = paste0(pair_ID,name)) %>% 
+                  left_join(trophic_level_tbl, by = "ids", keep = FALSE) %>% 
+                  dplyr::select(-ids) %>% 
+                  group_by(type, name) %>% 
+                  summarise(med_val = median(value), sd = sd(value), n = n()) %>% 
+                  mutate(group = "Trophic level")
+
+activity_tbl <- data %>% 
+              dplyr::select(pair_ID, predator_circadian_rhythm, prey_circadian_rhythm) %>% 
+              pivot_longer(2:3, names_to = "name", values_to = "circadian_rhythm") %>% 
+              separate(name, into = "name", sep = "_", remove = TRUE) %>% 
+              mutate(ids = paste0(pair_ID,name)) %>% 
+              dplyr::select(ids, type = circadian_rhythm)
+  
+activity <- data %>% 
+                  dplyr::select(pair_ID, pr_high_relative, py_high_relative) %>% 
+                  pivot_longer(2:3) %>% 
+                  separate(name, into = "name", sep = "_", remove = TRUE) %>% 
+                  mutate(ids = paste0(pair_ID,name)) %>% 
+                  left_join(activity_tbl, by = "ids", keep = FALSE) %>% 
+                  dplyr::select(-ids) %>%
+                  group_by(type, name) %>% 
+                  summarise(med_val = median(value), sd = sd(value), n = n()) %>% 
+                  mutate(group = "Circadian Rhythm")
+
+hunting_mode <-data %>% 
+                dplyr::select(type = predator_hunting_mode, pr_high_relative) %>% 
+                group_by(type) %>% 
+                summarise(med_val = median(pr_high_relative), 
+                          sd = sd(pr_high_relative), n = n()) %>% 
+                mutate(group = "Hunting mode")
+
+predator_guild <- data %>% 
+                    dplyr::select(type = predator_class, pr_high_relative) %>% 
+                    group_by(type) %>% 
+                    summarise(med_val = median(pr_high_relative), sd = sd(pr_high_relative), 
+                              n = n()) %>%       
+                    mutate(group = "Predator guild")
+
+prey_order <- data %>% 
+                dplyr::select(type = prey_order, py_high_relative) %>%
+                group_by(type) %>% 
+                summarise(med_val = median(py_high_relative), sd = sd(py_high_relative), n = n()) %>% 
+                mutate(group = "Prey order")
+```
+```{r}
+functional_traits <- rbind(pred_prey, prey_order, predator_guild, hunting_mode) %>% 
+                        mutate(ci_high = med_val+sd, 
+                               ci_low = med_val-sd, 
+                               group = factor(group, levels = c("Trophic position", "Predator guild", 
+                                                                "Hunting mode", "Prey order")),
+                               n = paste0("n = ", n),
+                               type = str_to_title(type),
+                               type = factor(type, levels = c("Prey", "Predator", 
+                                                                   "Mesocarnivore","Apex", 
+                                                                   "Other", "Ungulate", "Rodent",
+                                                                   "Primate","Lagomorph", "Marsupial",
+                                                                   "Opportunistic","Cursorial","Ambush")))
+
+fig_4a <- ggplot(functional_traits, aes(y = type, x = med_val, xmin = ci_low, xmax = ci_high)) +
+            geom_vline(xintercept=0, color="grey60",linetype="dashed") +
+            geom_point(color = "grey40") +
+            geom_errorbarh(height = .1,color = "grey40") +
+            scale_x_continuous(limits=c(-1,1),breaks=c(-1.5,-1,-0.5,0,.5,1))+
+            facet_grid(group ~ ., scales = "free", space = "free") +
+            theme_bw() +
+            xlab("Median Shift in Activity") +
+            ylab("") +
+            theme(strip.text.y = element_text(angle = 0),
+                  text=element_text(size=10, family="serif"), 
+                    panel.grid.minor = element_blank(),
+                    panel.grid.major = element_blank()) +
+            geom_text(aes(x = 0.75, label = n), family = "serif", size = 2.5, hjust = 0)
+```
+
+```{r}
+functional_traits2 <- rbind(bodysize, trophic_level, activity) %>% 
+                        mutate(ci_high = med_val+sd, 
+                               ci_low = med_val-sd,
+                               n = paste0("n = ", n),
+                               group = factor(group, levels = c("Trophic level","Body mass", "Diel activity")),
+                               type = factor(type, levels = c("> 100 kg","50-100 kg", "10-50 kg","< 10 kg",
+                                                              "Nocturnal","Crepuscular","Diurnal",
+                                                              "Herbivore","Omnivore", "Carnivore")))
+
+fig_4b <- ggplot(functional_traits2, aes(y = type, x = med_val, 
+                                          xmin = ci_low, xmax = ci_high, color = as.factor(name))) +
+              geom_vline(xintercept=0, color="grey60",linetype="dashed") +
+              geom_point(position=position_dodge(width= -.5)) +
+              geom_errorbarh(height = .1, position=position_dodge(width=-.5)) +
+              scale_color_manual(values = c("predator" = "#FFC30B","prey" = "#87CBBB")) +
+              scale_x_continuous(limits=c(-1,1),breaks=c(-1.5,-1,-0.5,0,.5,1))+
+              facet_grid(group ~ ., scales = "free", space = "free") +
+              theme_bw() +
+              xlab("Median Shift in Activity") +
+              ylab("") +
+              theme(strip.text.y = element_text(angle = 0),
+                    text=element_text(size=10, family="serif"), 
+                    legend.title = element_blank(), 
+                    legend.background = element_rect(fill = "#FFFFFF", color = "#3D3D3D"), 
+                    legend.position = "bottom", 
+                    legend.margin= margin(1,1,1,1), 
+                    legend.key = element_rect(fill = "transparent", colour = "transparent"), 
+                    panel.grid.minor = element_blank(),
+                    panel.grid.major = element_blank()) +
+              geom_text(aes(x = 0.75, label = n), position = position_dodge(width = -.7), 
+                        family = "serif", size = 2.5, hjust = 0)
+```
+
+```{r}
+fig4 <- plot_grid(fig_4a, fig_4b)
+
+#ggsave("figure4.png", fig4, height = 5, width = 8, units = "in", dpi = 600)
+```
+
