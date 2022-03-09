@@ -11,14 +11,17 @@ library(cowplot) #for combining plot panels
 
 ```{r include = FALSE}
 # Import data
-data <- read_csv(here("data", "VanScoyoc_et_al_data.csv"))
+data <- read_csv(here("data", "VanScoyoc_et_al_data.csv")) %>% 
+        mutate(pred_ID = paste0(reference, predator_common), 
+              prey_ID = paste0(reference, prey_common))
+
 head(data)
 colnames(data)
 ```
 
 ```{r}
 pred_prey <- data %>% 
-                dplyr::select(pr_high_relative, py_high_relative) %>% 
+                dplyr::select(predator = pr_high_relative, prey = py_high_relative) %>% 
                 pivot_longer(1:2) %>% 
                 separate(name, into = c("type"), sep = "_", remove = TRUE) %>% 
                 group_by(type) %>% 
@@ -33,7 +36,7 @@ bodysize_tbl <- data %>%
                   dplyr::select(ids, type = mass_category)
 
 bodysize <- data %>% 
-                dplyr::select(pair_ID, pr_high_relative, py_high_relative) %>% 
+                dplyr::select(pair_ID, predator = pr_high_relative, prey = py_high_relative) %>% 
                 pivot_longer(2:3) %>% 
                 separate(name, into = "name", sep = "_", remove = TRUE) %>% 
                 mutate(ids = paste0(pair_ID,name)) %>% 
@@ -51,7 +54,7 @@ trophic_level_tbl <- data %>%
               dplyr::select(ids, type = trophic_level)
   
 trophic_level <- data %>% 
-                  dplyr::select(pair_ID, pr_high_relative, py_high_relative) %>% 
+                  dplyr::select(pair_ID, predator = pr_high_relative, prey = py_high_relative) %>% 
                   pivot_longer(2:3) %>% 
                   separate(name, into = "name", sep = "_", remove = TRUE) %>% 
                   mutate(ids = paste0(pair_ID,name)) %>% 
@@ -69,7 +72,7 @@ activity_tbl <- data %>%
               dplyr::select(ids, type = circadian_rhythm)
   
 activity <- data %>% 
-                  dplyr::select(pair_ID, pr_high_relative, py_high_relative) %>% 
+                  dplyr::select(pair_ID, predator = pr_high_relative, prey = py_high_relative) %>% 
                   pivot_longer(2:3) %>% 
                   separate(name, into = "name", sep = "_", remove = TRUE) %>% 
                   mutate(ids = paste0(pair_ID,name)) %>% 
@@ -77,7 +80,7 @@ activity <- data %>%
                   dplyr::select(-ids) %>%
                   group_by(type, name) %>% 
                   summarise(med_val = median(value), sd = sd(value), n = n()) %>% 
-                  mutate(group = "Circadian Rhythm")
+                  mutate(group = "Circadian rhythm")
 
 hunting_mode <-data %>% 
                 dplyr::select(type = predator_hunting_mode, pr_high_relative) %>% 
@@ -134,10 +137,9 @@ functional_traits2 <- rbind(bodysize, trophic_level, activity) %>%
                         mutate(ci_high = med_val+sd, 
                                ci_low = med_val-sd,
                                n = paste0("n = ", n),
-                               group = factor(group, levels = c("Trophic level","Body mass", "Diel activity")),
+                               group = factor(group, levels = c("Trophic level","Body mass", "Circadian rhythm")),
                                type = factor(type, levels = c("> 100 kg","50-100 kg", "10-50 kg","< 10 kg",
-                                                              "Nocturnal","Crepuscular","Diurnal",
-                                                              "Herbivore","Omnivore", "Carnivore")))
+                                                              "Herbivore","Omnivore", "Carnivore",                                                                                    "Nocturnal","Crepuscular","Diurnal",)))
 
 fig_4b <- ggplot(functional_traits2, aes(y = type, x = med_val, 
                                           xmin = ci_low, xmax = ci_high, color = as.factor(name))) +

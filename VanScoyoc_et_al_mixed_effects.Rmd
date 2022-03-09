@@ -22,13 +22,15 @@ library(sjPlot) #for plotting linear model
 # Import data
 data <- read_csv(here("data", "VanScoyoc_et_al_data.csv"))
 head(data)
-
+colnames(data)
 ```
 
 ```{r}
 # Create new columns
-full_dat <- full_dat %>% 
-        mutate(pr_change = ifelse(abs(pr_shift_diurnal) < 0.1 | abs(py_shift_dirunal) < 0.1, 
+full_dat <- data %>% 
+        mutate(pr_shift_diurnal = pr_high_D_AR - pr_low_D_AR, 
+               py_shift_diurnal = py_high_D_AR - py_low_D_AR,
+               pr_change = ifelse(abs(pr_shift_diurnal) < 0.1 | abs(py_shift_diurnal) < 0.1, 
                                   "Not Significant", "Significant"), #note if shift is > 10%
                hypothesis = ifelse(pr_shift_diurnal < 0 & py_shift_diurnal < 0, "Mutual Avoidance", 
                           ifelse(pr_shift_diurnal > 0 & py_shift_diurnal > 0, "Mutual Attraction",
@@ -37,7 +39,9 @@ full_dat <- full_dat %>%
                                      "Neutral")))))
 # Filter dataset
 filtered_dat <- full_dat %>% 
-        filter(hypothesis != "Neutral") # remove neutral hypotheses
+        filter(hypothesis != "Neutral") %>%  # remove neutral hypotheses
+        mutate(opp_same = ifelse(hypothesis == "Mutual Attraction" | hypothesis == "Mutual Avoidance", 
+                                  "same", "opposite"))
                 #overlap_low >= 0.5 &  # filter to strong starting interaction 
                 #pr_change == "Significant" & # filter to > 10% shift
 
@@ -47,6 +51,9 @@ filtered_dat <- full_dat %>%
 # Run mixed effects model on filtered data
 model <- lmer(change_overlap ~ hypothesis + (1|reference), data = filtered_dat)
 summary(model)
+
+model_oppsame <- lmer(change_overlap ~ opp_same + (1|reference), data = filtered_dat)
+summary(model_oppsame)
 
 # Plot
 ggplot(filtered_dat,aes(x=reference,y=change_overlap,color=hypothesis))+
@@ -61,7 +68,7 @@ pred <- full_dat %>%
   dplyr::select(reference, name = predator_common, change_overlap, shift_diurnal = pr_shift_diurnal) %>% 
   mutate(type = "predator", reps = paste0(reference,name)) #label and add pseudoreplication label
 prey <- full_dat %>% 
-  dplyr::select(reference, name = prey_common, change_overlap, shift_diurnal = py_shift_dirunal) %>% 
+  dplyr::select(reference, name = prey_common, change_overlap, shift_diurnal = py_shift_diurnal) %>% 
    mutate(type = "prey", reps = paste0(reference,name)) #label and add pseudoreplication label
 
 dat_labeled <- rbind(pred, prey) #recombine labeled dataset
