@@ -21,7 +21,7 @@ library(cowplot) #for joining plot panels
 ```{r include = FALSE}
 # Import data
 
-data <- read_csv(here("data", "VanScoyoc_et_al_fulldata.csv"))
+data <- read_csv(here("data", "VanScoyoc_et_al_data.csv"))
 head(data)
 ```
 
@@ -30,10 +30,11 @@ head(data)
 
 fig2a_data <- data %>% #call dataset
                 dplyr::select(pair_ID, #select columns
-                              predator_low_normalized, prey_low_normalized,
-                              predator_high_normalized, prey_high_normalized) %>% 
+                              pr_low_relative, py_low_relative,
+                              pr_high_relative, py_high_relative) %>% 
                 pivot_longer(2:5) %>% #pivot data to long format for tidying human_activity level
                 separate(name,c("type","human_activity"), sep = "_") %>% #separate columns
+                mutate(type = ifelse(type == "pr", "predator", "prey")) %>% 
                 pivot_wider(names_from = type, values_from = value) #pivot wide for plotting
 ```
 
@@ -41,18 +42,24 @@ fig2a_data <- data %>% #call dataset
 # Fig 2a Plot
 
 # Behavioral response pathway labels for plot 
-plot_labels <- data.frame(name = c("Prey Switching", "Mutual Attraction", 
-                                   "Mutual Avoidance", "Prey Refuge"),
+plot_labels <- data.frame(name = c("Prey Refuge", "Mutual Avoidance", 
+                                   "Mutual Attraction", "Prey Switching"),
                           x = c(-0.75, 0.75, -0.75, 0.75), 
-                          y = c(0.82, 0.82, -0.92, - 0.92)) 
+                          y = c(0.82, 0.82, -0.92, - 0.92),
+                          color = c("#EDF7B5","#D6AEF8","#D6AEF8","#EDF7B5")) 
 # Plot
 fig2a <- ggplot() +
         #Add data
             geom_line(data = fig2a_data, aes(x=prey, y=predator, #add lines grouped by pair_id 
                                              group = pair_ID), color = "#3D3D3D") +
-            geom_point(data = fig2a_data, aes(x=prey, y=predator), alpha = 0.7) + #add points
-            geom_label(data = plot_labels, aes(x = x, y = y, label = name), #add pathway text
-                       size = 3.2, family="serif") +
+            geom_point(data = fig2a_data, aes(x=prey, y=predator), alpha = 0.7) + #add points   
+            geom_label(data = plot_labels, aes(x = x, y = y, #add behavioral response pathway 
+                                               label = name, 
+                                               fill = plot_labels$color, 
+                                               alpha = 0.5), 
+                                    size = 3.2, family="serif") +
+            scale_fill_manual(values = plot_labels$color) +
+            guides(fill="none", alpha="none") + 
             labs(x = "Prey Activity Shift", y = "Predator Activity Shift") + #label axes
         #Format plot
             geom_vline(xintercept = 0) + #set x-axis line
@@ -67,10 +74,17 @@ fig2a <- ggplot() +
 # Tidy data for Figure2b
 
 fig2b_data <- data %>% #call dataset
+                mutate(pr_shift_diurnal = pr_high_D_AR - pr_low_D_AR, 
+                       py_shift_diurnal = py_high_D_AR - py_low_D_AR,
+                       hypothesis = ifelse(pr_shift_diurnal < 0 & py_shift_diurnal < 0, "Mutual Avoidance", 
+                                  ifelse(pr_shift_diurnal > 0 & py_shift_diurnal > 0, "Mutual Attraction",
+                                    ifelse(pr_shift_diurnal > 0 & py_shift_diurnal < 0, "Prey Switching",
+                                      ifelse(pr_shift_diurnal < 0 & py_shift_diurnal > 0, "Prey Refuge", 
+                                             "Neutral"))))) %>% 
                 dplyr::select(reference, pair_ID,  #select columns
                               hypothesis, change_overlap) %>%
                 filter(!grepl('Neutral', hypothesis)) %>% #remove neutral response dyads (n = 6)
-                drop_na() #drop dyads without overlap values (2 studies, n = 9)
+                drop_na() #drop dyads without overlap values (2 studies, n = 9)  (total 167 dyads, 16 studies)
 ```
 
 ```{r}
@@ -83,6 +97,13 @@ model_means_cld <- cld(object = model_means, #add letters to each mean
 ```
 
 ```{r}
+# Behavioral response pathway labels for plot 
+plot_labels2 <- data.frame(name = c("Prey Refuge", "Mutual Avoidance", 
+                                    "Mutual Attraction", "Prey Switching"),
+                          y = c(0.1, 0.1, 0.1, 0.1), 
+                          x = c(1.3,2.3,3.3,4.3),
+                          color = c("#EDF7B5","#D6AEF8","#D6AEF8","#EDF7B5")) 
+
 # Fig 2b Plot 
 
 fig2b <- ggplot() +
@@ -96,6 +117,13 @@ fig2b <- ggplot() +
           geom_errorbar(data = model_means_cld, #add confidence intervals
                         aes(ymin = lower.CL, ymax = upper.CL, x = hypothesis),
                         width = 0.05, color = "maroon") +
+          geom_label(data = plot_labels2, aes(x = x, y = y, #add behavioral response pathway 
+                                               label = name, 
+                                               fill = plot_labels2$color, 
+                                               alpha = 0.5), 
+                                    size = 3.2, family="serif") +
+          scale_fill_manual(values = plot_labels2$color) +
+          guides(fill="none", alpha="none") + 
         #geom_text(data = model_means_cld, #add letters to plot
                   #aes(y = emmean, x = hypothesis, label = str_trim(.group)),
                   #position = position_nudge(x = 0.2), hjust = 0, color = "maroon", size = 3) +
@@ -103,8 +131,13 @@ fig2b <- ggplot() +
       #Format plot
           geom_hline(yintercept = 0) + #set x-axis line
           theme_light() + #set theme
-          theme(text=element_text(size=10, family="serif")) + #format axis text          
-          coord_flip() #flip plot orientation
+          theme(text=element_text(size=10, family="serif"), #format axis text   
+                axis.title.y=element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks.y=element_blank()) + #remove x axis    
+          coord_flip() + #flip plot orientation
+          ylim(c(-0.5, 0.5)) 
+fig2b
 ```
 
 ```{r}
