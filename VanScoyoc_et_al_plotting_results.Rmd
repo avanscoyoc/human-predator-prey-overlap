@@ -42,11 +42,13 @@ fig2a_data <- data %>% #call dataset
 # Fig 2a Plot
 
 # Behavioral response pathway labels for plot 
-plot_labels <- data.frame(name = c("Prey Refuge", "Mutual Avoidance", 
-                                   "Mutual Attraction", "Prey Switching"),
+plot_labels <- data.frame(name = c("Prey Switching", "Mutual Attraction", 
+                                   "Mutual Avoidance", "Prey Refuge"),
                           x = c(-0.75, 0.75, -0.75, 0.75), 
-                          y = c(0.82, 0.82, -0.92, - 0.92),
-                          color = c("#EDF7B5","#D6AEF8","#D6AEF8","#EDF7B5")) 
+                          y = c(0.82, 0.82, -0.92, - 0.92))
+                          
+plot_colors <- factor(c("#D6AEF8","#EDF7B5","#EDF7B5","#D6AEF8"))
+
 # Plot
 fig2a <- ggplot() +
         #Add data
@@ -54,13 +56,13 @@ fig2a <- ggplot() +
                                              group = pair_ID), color = "#3D3D3D") +
             geom_point(data = fig2a_data, aes(x=prey, y=predator), alpha = 0.7) + #add points   
             geom_label(data = plot_labels, aes(x = x, y = y, #add behavioral response pathway 
-                                               label = name, 
-                                               fill = plot_labels$color, 
-                                               alpha = 0.5), 
+                                               label = name,
+                                               fill = plot_colors,
+                                               alpha = 0.2), 
                                     size = 3.2, family="serif") +
-            scale_fill_manual(values = plot_labels$color) +
+            scale_fill_manual(values = c("#EDF7B5","#D6AEF8")) +
             guides(fill="none", alpha="none") + 
-            labs(x = "Prey Activity Shift", y = "Predator Activity Shift") + #label axes
+            labs(x = "Prey Activity Response", y = "Predator Activity Response") + #label axes
         #Format plot
             geom_vline(xintercept = 0) + #set x-axis line
             geom_hline(yintercept = 0) + #set y-axis line
@@ -68,6 +70,8 @@ fig2a <- ggplot() +
             coord_fixed() + #fix plot dimensions
             theme_light() + #set theme
             theme(text=element_text(size=10, family="serif")) #set text size & font
+fig2a
+?scale_fill_manual
 ```
 
 ```{r}
@@ -98,17 +102,19 @@ model_means_cld <- cld(object = model_means, #add letters to each mean
 
 ```{r}
 # Behavioral response pathway labels for plot 
-plot_labels2 <- data.frame(name = c("Prey Refuge", "Mutual Avoidance", 
-                                    "Mutual Attraction", "Prey Switching"),
-                          y = c(0.1, 0.1, 0.1, 0.1), 
-                          x = c(1.3,2.3,3.3,4.3),
-                          color = c("#EDF7B5","#D6AEF8","#D6AEF8","#EDF7B5")) 
+plot_labels2 <- data.frame(name = c("Prey Refuge", "Prey Switching",
+                                    "Mutual Avoidance", "Mutual Attraction"),
+                          y = c(-0.25,-0.25,0.25, 0.25), 
+                          x = c(1.3,2.3,3.3,4.3))
+
+plot_colors2 <- factor(c("#D6AEF8","#D6AEF8","#EDF7B5","#EDF7B5"))
 
 # Fig 2b Plot 
 
 fig2b <- ggplot() +
       #Add data
-          geom_point(data = fig2b_data, aes(y = change_overlap, x = hypothesis), #add points
+          geom_point(data = fig2b_data, aes(y = change_overlap, x = fct_relevel(hypothesis, 
+            "Prey Refuge","Prey Switching","Mutual Avoidance","Mutual Attraction")), #add points
             shape = 16, alpha = 0.5, position = position_nudge(x = -0.2)) +
           geom_boxplot(data = fig2b_data, aes(y = change_overlap, x = hypothesis), #add boxplot
             width = 0.2, outlier.shape = NA, position = position_nudge(x = 0)) +
@@ -119,15 +125,15 @@ fig2b <- ggplot() +
                         width = 0.05, color = "maroon") +
           geom_label(data = plot_labels2, aes(x = x, y = y, #add behavioral response pathway 
                                                label = name, 
-                                               fill = plot_labels2$color, 
-                                               alpha = 0.5), 
+                                               fill = plot_colors2, 
+                                               alpha = 0.2), 
                                     size = 3.2, family="serif") +
-          scale_fill_manual(values = plot_labels2$color) +
+          scale_fill_manual(values = c("#EDF7B5","#D6AEF8","#EDF7B5","#EDF7B5")) +
           guides(fill="none", alpha="none") + 
         #geom_text(data = model_means_cld, #add letters to plot
                   #aes(y = emmean, x = hypothesis, label = str_trim(.group)),
                   #position = position_nudge(x = 0.2), hjust = 0, color = "maroon", size = 3) +
-          labs(x = "", y = "Change in Overlap") + #label axes
+          labs(x = "", y = "Change in Temporal Overlap") + #label axes
       #Format plot
           geom_hline(yintercept = 0) + #set x-axis line
           theme_light() + #set theme
@@ -138,15 +144,19 @@ fig2b <- ggplot() +
           coord_flip() + #flip plot orientation
           ylim(c(-0.5, 0.5)) 
 fig2b
+
 ```
 
 ```{r}
 # Combine Figure 2 plots
 
 figure2 <- plot_grid(fig2a, fig2b, labels = "AUTO", label_size = 12, #combine plots
-                    align = "h", axis = "b", nrow = 1, rel_widths = c(3,1.7))
-
+                    align = "h", axis = "b", nrow = 1, rel_widths = c(3,1.7), 
+                    hjust = c(0, -0.04)
+                    )
 figure2
+
+ggsave("figure2.png", figure2, height = 5, width = 6.5, units = "in", dpi = 600)
 ```
 
 **Fig. 2.** *An analysis of human influence on predator-prey overlap. (a) Humans altered activity in mammal predator-prey dyads via four major pathways. Lines represent the relative magnitude and direction of diel activity shifts for each predator-prey dyad between paired sites of low and high human activity (n = 184 predator-prey dyads, 19 studies). (b) Predator-prey activity shifts did not alter temporal overlap between predator-prey dyads (n = 177 predator-prey dyads, 17 studies). Black dots represent change in temporal overlap for each dyad. Red error bars represent estimated marginal means and  ± 95% confidence interval.* 
