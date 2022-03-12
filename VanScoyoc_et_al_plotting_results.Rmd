@@ -104,7 +104,7 @@ model_means_cld <- cld(object = model_means, #add letters to each mean
 # Behavioral response pathway labels for plot 
 plot_labels2 <- data.frame(name = c("Prey Refuge", "Prey Switching",
                                     "Mutual Avoidance", "Mutual Attraction"),
-                          y = c(-0.25,-0.25,0.25, 0.25), 
+                          y = c(-0.25,-0.25,0.28, 0.28), 
                           x = c(1.3,2.3,3.3,4.3))
 
 plot_colors2 <- factor(c("#D6AEF8","#D6AEF8","#EDF7B5","#EDF7B5"))
@@ -135,7 +135,7 @@ fig2b <- ggplot() +
                   #position = position_nudge(x = 0.2), hjust = 0, color = "maroon", size = 3) +
           labs(x = "", y = "Change in Temporal Overlap") + #label axes
       #Format plot
-          geom_hline(yintercept = 0) + #set x-axis line
+          geom_hline(yintercept = 0, linetype = "dashed") + #set x-axis line
           theme_light() + #set theme
           theme(text=element_text(size=10, family="serif"), #format axis text   
                 axis.title.y=element_blank(),
@@ -152,11 +152,9 @@ fig2b
 
 figure2 <- plot_grid(fig2a, fig2b, labels = "AUTO", label_size = 12, #combine plots
                     align = "h", axis = "b", nrow = 1, rel_widths = c(3,1.7), 
-                    hjust = c(0, -0.04)
-                    )
+                    hjust = c(0, -0.04))
 figure2
-
-ggsave("figure2.png", figure2, height = 5, width = 6.5, units = "in", dpi = 600)
+ggsave("figure2.png", figure2, height = 4, width = 6.5, units = "in", dpi = 600)
 ```
 
 **Fig. 2.** *An analysis of human influence on predator-prey overlap. (a) Humans altered activity in mammal predator-prey dyads via four major pathways. Lines represent the relative magnitude and direction of diel activity shifts for each predator-prey dyad between paired sites of low and high human activity (n = 184 predator-prey dyads, 19 studies). (b) Predator-prey activity shifts did not alter temporal overlap between predator-prey dyads (n = 177 predator-prey dyads, 17 studies). Black dots represent change in temporal overlap for each dyad. Red error bars represent estimated marginal means and  ± 95% confidence interval.* 
