@@ -9,7 +9,6 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 ```{r}
 # Libraries
-
 library(here) #set local working directory
 library(tidyverse) #for data manipulation
 library(emmeans) #for calculating estimated marginal means
@@ -20,18 +19,32 @@ library(cowplot) #for joining plot panels
 
 ```{r include = FALSE}
 # Import data
-
 data <- read_csv(here("data", "VanScoyoc_et_al_data.csv"))
-head(data)
 ```
 
 ```{r}
-# Tidy data for Figure2a
+# Center and standardize diurnal activity ratios
+data <- data %>% 
+        mutate(#center and standardize predator data
+               pr_low_rescale = (pr_low_D_AR-0.5)*2 + #rescale diurnal activity from (0-1) to (-1-1)
+                                 (-((pr_low_D_AR-0.5)*2)), #set low data to zero 
+               pr_high_rescale = (pr_high_D_AR-0.5)*2 + #rescale diurnal activity from (0-1) to (-1-1)
+                                 (-((pr_low_D_AR-0.5)*2)), #add opposite of pr_low_rescaled
+               #center and standardize prey data
+               py_low_rescale = (py_low_D_AR-0.5)*2 + #rescale diurnal activity from (0-1) to (-1-1)
+                                 (-((py_low_D_AR-0.5)*2)), #set low data to zero 
+               py_high_rescale = (py_high_D_AR-0.5)*2 + #rescale from (0-1) to (-1-1)
+                                 (-((py_low_D_AR-0.5)*2))) #add opposite of pr_low_rescaled
+```
 
+
+
+```{r}
+# Tidy data for Figure2a
 fig2a_data <- data %>% #call dataset
                 dplyr::select(pair_ID, #select columns
-                              pr_low_relative, py_low_relative,
-                              pr_high_relative, py_high_relative) %>% 
+                              pr_low_rescale, pr_high_rescale, 
+                              py_low_rescale, py_high_rescale) %>% 
                 pivot_longer(2:5) %>% #pivot data to long format for tidying human_activity level
                 separate(name,c("type","human_activity"), sep = "_") %>% #separate columns
                 mutate(type = ifelse(type == "pr", "predator", "prey")) %>% 
@@ -60,40 +73,38 @@ fig2a <- ggplot() +
                                                fill = plot_colors,
                                                alpha = 0.2), 
                                     size = 3.2, family="serif") +
-            scale_fill_manual(values = c("#EDF7B5","#D6AEF8")) +
-            guides(fill="none", alpha="none") + 
+          #Format plot
+            scale_fill_manual(values = c("#EDF7B5","#D6AEF8")) + #fill labels with theme colors
+            guides(fill="none", alpha="none") + #remove fill legend
             labs(x = "Prey Activity Response", y = "Predator Activity Response") + #label axes
-        #Format plot
             geom_vline(xintercept = 0) + #set x-axis line
             geom_hline(yintercept = 0) + #set y-axis line
             lims(x=c(-1,1),y=c(-1,1)) + #set axis limits
             coord_fixed() + #fix plot dimensions
             theme_light() + #set theme
             theme(text=element_text(size=10, family="serif")) #set text size & font
-fig2a
-?scale_fill_manual
 ```
 
 ```{r}
 # Tidy data for Figure2b
-
 fig2b_data <- data %>% #call dataset
-                mutate(pr_shift_diurnal = pr_high_D_AR - pr_low_D_AR, 
-                       py_shift_diurnal = py_high_D_AR - py_low_D_AR,
+                mutate(pr_shift_diurnal = pr_high_D_AR - pr_low_D_AR, #predator change in diurnality
+                       py_shift_diurnal = py_high_D_AR - py_low_D_AR, #prey change in diurnality
                        hypothesis = ifelse(pr_shift_diurnal < 0 & py_shift_diurnal < 0, "Mutual Avoidance", 
                                   ifelse(pr_shift_diurnal > 0 & py_shift_diurnal > 0, "Mutual Attraction",
                                     ifelse(pr_shift_diurnal > 0 & py_shift_diurnal < 0, "Prey Switching",
                                       ifelse(pr_shift_diurnal < 0 & py_shift_diurnal > 0, "Prey Refuge", 
                                              "Neutral"))))) %>% 
-                dplyr::select(reference, pair_ID,  #select columns
+                dplyr::select(reference, pair_ID, #select columns for plotting
                               hypothesis, change_overlap) %>%
                 filter(!grepl('Neutral', hypothesis)) %>% #remove neutral response dyads (n = 6)
-                drop_na() #drop dyads without overlap values (2 studies, n = 9)  (total 167 dyads, 16 studies)
+                drop_na() #without dyads without overlap values (n = 5) 
+  
+#Results in 16 studies, n = 167 dyads
 ```
 
 ```{r}
 # Calculate confidence intervalse for Figure 2b
-
 model <- lm(change_overlap ~ hypothesis, data = fig2b_data) #set up model
 model_means <- emmeans(object = model, specs = "hypothesis") #get adjusted weight means per group
 model_means_cld <- cld(object = model_means, #add letters to each mean
@@ -104,8 +115,8 @@ model_means_cld <- cld(object = model_means, #add letters to each mean
 # Behavioral response pathway labels for plot 
 plot_labels2 <- data.frame(name = c("Prey Refuge", "Prey Switching",
                                     "Mutual Avoidance", "Mutual Attraction"),
-                          y = c(-0.25,-0.25,0.28, 0.28), 
-                          x = c(1.3,2.3,3.3,4.3))
+                           y = c(-0.25,-0.25,0.28, 0.28), 
+                           x = c(1.3,2.3,3.3,4.3))
 
 plot_colors2 <- factor(c("#D6AEF8","#D6AEF8","#EDF7B5","#EDF7B5"))
 
@@ -128,33 +139,27 @@ fig2b <- ggplot() +
                                                fill = plot_colors2, 
                                                alpha = 0.2), 
                                     size = 3.2, family="serif") +
-          scale_fill_manual(values = c("#EDF7B5","#D6AEF8","#EDF7B5","#EDF7B5")) +
-          guides(fill="none", alpha="none") + 
-        #geom_text(data = model_means_cld, #add letters to plot
-                  #aes(y = emmean, x = hypothesis, label = str_trim(.group)),
-                  #position = position_nudge(x = 0.2), hjust = 0, color = "maroon", size = 3) +
-          labs(x = "", y = "Change in Temporal Overlap") + #label axes
       #Format plot
+          scale_fill_manual(values = c("#EDF7B5","#D6AEF8","#EDF7B5","#EDF7B5")) + #fill plot labels
+          guides(fill="none", alpha="none") + #remove fill legend
+          labs(x = "", y = "Change in Temporal Overlap") + #label axes
           geom_hline(yintercept = 0, linetype = "dashed") + #set x-axis line
           theme_light() + #set theme
           theme(text=element_text(size=10, family="serif"), #format axis text   
-                axis.title.y=element_blank(),
-                axis.text.y=element_blank(),
+                axis.title.y=element_blank(), #remove x axis   
+                axis.text.y=element_blank(), #remove x axis   
                 axis.ticks.y=element_blank()) + #remove x axis    
           coord_flip() + #flip plot orientation
-          ylim(c(-0.5, 0.5)) 
-fig2b
-
+          ylim(c(-0.5, 0.5)) #fix plot size
 ```
 
-```{r}
+```{r fig2, fig.height = 4, fig.width = 6.5, dpi = 300}
 # Combine Figure 2 plots
-
 figure2 <- plot_grid(fig2a, fig2b, labels = "AUTO", label_size = 12, #combine plots
                     align = "h", axis = "b", nrow = 1, rel_widths = c(3,1.7), 
                     hjust = c(0, -0.04))
 figure2
-ggsave("figure2.png", figure2, height = 4, width = 6.5, units = "in", dpi = 600)
+#ggsave("figure2.png", figure2, height = 4, width = 6.5, units = "in", dpi = 600)
 ```
 
-**Fig. 2.** *An analysis of human influence on predator-prey overlap. (a) Humans altered activity in mammal predator-prey dyads via four major pathways. Lines represent the relative magnitude and direction of diel activity shifts for each predator-prey dyad between paired sites of low and high human activity (n = 184 predator-prey dyads, 19 studies). (b) Predator-prey activity shifts did not alter temporal overlap between predator-prey dyads (n = 177 predator-prey dyads, 17 studies). Black dots represent change in temporal overlap for each dyad. Red error bars represent estimated marginal means and  ± 95% confidence interval.* 
+**Fig. 2.** *Human influence on predator-prey temporal activity and overlap based on review of camera trap studies between paired settings of low and high human use. (a) Humans altered diel activity in mammal predator-prey dyads via four major pathways: mutual attraction, mutual avoidance, prey refuge, and prey switching. Lines reflect the relative magnitude and direction of diel activity response toward nocturnality (-1) or diurnality (1) for each predator-prey dyad at paired settings of low and high human use (n = 178 predator-prey dyads, 19 studies). (b) Change in predator-prey temporal overlap between settings of low and high human use did not vary predictably with predator-prey activity responses (n = 167 predator-prey dyads, 16 studies). Similar predator-prey responses (i.e., prey refuge, prey switching) to humans did not result in increased overlap between dyads, likewise opposite predator-prey responses (i.e., mutual attraction, mutual avoidance) to humans did not result in decreased overlap between dyads as predicted. Black dots represent change in temporal overlap for each dyad. Red error bars represent estimated marginal means and  ± 95% confidence interval.*
