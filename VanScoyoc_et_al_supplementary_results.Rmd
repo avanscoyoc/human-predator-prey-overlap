@@ -70,7 +70,7 @@ hunting_mode <- data %>%
                 drop_na(type) %>% #drop prey values
                 summarise(med_val = median(diurnal_shift), 
                           sd = sd(diurnal_shift), n = n()) %>% 
-                mutate(group = "Predator hunting mode")
+                mutate(group = "Hunting mode")
 
 predator_guild <- data %>% 
                 group_by(type = predator_guild) %>% 
@@ -94,7 +94,7 @@ functional_traits <- rbind(trophic_position, predator_guild, hunting_mode, prey_
                      mutate(ci_low = med_val - sd, 
                             ci_high = med_val + sd,
                             group = factor(group, levels = c("Trophic position", "Predator guild", 
-                                                             "Predator hunting mode", "Prey order")),
+                                                             "Hunting mode", "Prey order")),
                             type = factor(type, levels = c("Prey", "Predator", 
                                                            "Mesocarnivore","Apex", 
                                                            "Other", "Ungulate", "Rodent",
