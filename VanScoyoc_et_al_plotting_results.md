@@ -1,4 +1,4 @@
-VanScoyoc\_et\_al\_plotting\_results
+VanScoyoc et al. - Figure 2
 ================
 
 ![](VanScoyoc_et_al_plotting_results_files/figure-gfm/fig2-1.png)<!-- -->

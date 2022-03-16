@@ -1,7 +1,11 @@
 ---
-title: "VanScoyoc_et_al_supplementary_results"
+title: "Van Scoyoc et al. - Supplementary Figure S1"
 output: github_document
 ---
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
 
 ```{r}
 library(tidyverse) #for manipulating data
@@ -11,146 +15,136 @@ library(cowplot) #for combining plot panels
 
 ```{r include = FALSE}
 # Import data
-data <- read_csv(here("data", "VanScoyoc_et_al_data.csv")) %>% 
-        mutate(pred_ID = paste0(reference, predator_common), 
-              prey_ID = paste0(reference, prey_common))
+data_predator <- read_csv(here("data", "VanScoyoc_et_al_data.csv"), trim_ws = TRUE) %>% 
+                 mutate(ID = paste0(reference, predator_common), #add unique ID
+                        trophic_position = "Predator",
+                        diurnal_shift = pr_high_D_AR - pr_low_D_AR) %>% #calculate activity shift
+                 dplyr::select(ID, reference, trophic_position, diurnal_shift,
+                               predator_guild,predator_hunting_mode,
+                               trophic_level = predator_trophic_level, 
+                               body_mass = predator_mass_category,
+                               circadian_rhythm = predator_circadian_rhythm) %>% 
+                 unique() #remove duplicate predators
 
-head(data)
-colnames(data)
+data_prey <- read_csv(here("data", "VanScoyoc_et_al_data.csv"), trim_ws = TRUE) %>% 
+                 mutate(ID = paste0(reference, prey_common), #add unique ID
+                        trophic_position = "Prey",
+                        diurnal_shift = py_high_D_AR - py_low_D_AR) %>% #calculate activity shift
+                 dplyr::select(ID, reference, trophic_position, diurnal_shift,
+                               prey_order, body_mass = prey_mass_category, 
+                               trophic_level = prey_trophic_level, 
+                               circadian_rhythm = prey_circadian_rhythm) %>% 
+                 unique() #remove duplicate prey
+
+data <- full_join(data_predator, data_prey) #49 predators, 76 prey
 ```
 
 ```{r}
-pred_prey <- data %>% 
-                dplyr::select(predator = pr_high_relative, prey = py_high_relative) %>% 
-                pivot_longer(1:2) %>% 
-                separate(name, into = c("type"), sep = "_", remove = TRUE) %>% 
-                group_by(type) %>% 
-                summarise(med_val = median(value), sd = sd(value), n = n()) %>% 
+#calculate median values, standard deviation, and sample size for each functional trait 
+
+trophic_position <- data %>% 
+                group_by(type = trophic_position) %>% 
+                summarise(med_val = median(diurnal_shift), sd = sd(diurnal_shift), n = n()) %>% 
                 mutate(group = "Trophic position")
 
-bodysize_tbl <- data %>% 
-                  dplyr::select(pair_ID, predator_mass_category, prey_mass_category) %>% 
-                  pivot_longer(2:3, names_to = "name", values_to = "mass_category") %>% 
-                  separate(name, into = "name", sep = "_", remove = TRUE) %>% 
-                  mutate(ids = paste0(pair_ID,name)) %>% 
-                  dplyr::select(ids, type = mass_category)
-
 bodysize <- data %>% 
-                dplyr::select(pair_ID, predator = pr_high_relative, prey = py_high_relative) %>% 
-                pivot_longer(2:3) %>% 
-                separate(name, into = "name", sep = "_", remove = TRUE) %>% 
-                mutate(ids = paste0(pair_ID,name)) %>% 
-                left_join(bodysize_tbl, by = "ids", keep = FALSE) %>% 
-                dplyr::select(-ids) %>% 
-                group_by(type, name) %>% 
-                summarise(med_val = median(value), sd = sd(value), n = n()) %>% 
-                mutate(group = "Body mass")
+                group_by(type = body_mass, trophic_position) %>% 
+                summarise(med_val = median(diurnal_shift), 
+                          sd = sd(diurnal_shift), n = n()) %>% 
+                mutate(group = "Body size (kg)")
 
-trophic_level_tbl <- data %>% 
-              dplyr::select(pair_ID, predator_trophic_level, prey_trophic_level) %>% 
-              pivot_longer(2:3, names_to = "name", values_to = "trophic_level") %>% 
-              separate(name, into = "name", sep = "_", remove = TRUE) %>% 
-              mutate(ids = paste0(pair_ID,name)) %>% 
-              dplyr::select(ids, type = trophic_level)
-  
 trophic_level <- data %>% 
-                  dplyr::select(pair_ID, predator = pr_high_relative, prey = py_high_relative) %>% 
-                  pivot_longer(2:3) %>% 
-                  separate(name, into = "name", sep = "_", remove = TRUE) %>% 
-                  mutate(ids = paste0(pair_ID,name)) %>% 
-                  left_join(trophic_level_tbl, by = "ids", keep = FALSE) %>% 
-                  dplyr::select(-ids) %>% 
-                  group_by(type, name) %>% 
-                  summarise(med_val = median(value), sd = sd(value), n = n()) %>% 
-                  mutate(group = "Trophic level")
+                group_by(type = trophic_level, trophic_position) %>% 
+                summarise(med_val = median(diurnal_shift), 
+                          sd = sd(diurnal_shift), n = n()) %>% 
+                mutate(group = "Trophic level")
 
-activity_tbl <- data %>% 
-              dplyr::select(pair_ID, predator_circadian_rhythm, prey_circadian_rhythm) %>% 
-              pivot_longer(2:3, names_to = "name", values_to = "circadian_rhythm") %>% 
-              separate(name, into = "name", sep = "_", remove = TRUE) %>% 
-              mutate(ids = paste0(pair_ID,name)) %>% 
-              dplyr::select(ids, type = circadian_rhythm)
-  
-activity <- data %>% 
-                  dplyr::select(pair_ID, predator = pr_high_relative, prey = py_high_relative) %>% 
-                  pivot_longer(2:3) %>% 
-                  separate(name, into = "name", sep = "_", remove = TRUE) %>% 
-                  mutate(ids = paste0(pair_ID,name)) %>% 
-                  left_join(activity_tbl, by = "ids", keep = FALSE) %>% 
-                  dplyr::select(-ids) %>%
-                  group_by(type, name) %>% 
-                  summarise(med_val = median(value), sd = sd(value), n = n()) %>% 
-                  mutate(group = "Circadian rhythm")
+circadian_rhythm <- data %>% 
+                group_by(type = circadian_rhythm, trophic_position) %>% 
+                summarise(med_val = median(diurnal_shift), 
+                          sd = sd(diurnal_shift), n = n()) %>% 
+                mutate(group = "Circadian rhythm")
 
-hunting_mode <-data %>% 
-                dplyr::select(type = predator_hunting_mode, pr_high_relative) %>% 
-                group_by(type) %>% 
-                summarise(med_val = median(pr_high_relative), 
-                          sd = sd(pr_high_relative), n = n()) %>% 
-                mutate(group = "Hunting mode")
+hunting_mode <- data %>% 
+                group_by(type = predator_hunting_mode) %>% 
+                drop_na(type) %>% #drop prey values
+                summarise(med_val = median(diurnal_shift), 
+                          sd = sd(diurnal_shift), n = n()) %>% 
+                mutate(group = "Predator hunting mode")
 
 predator_guild <- data %>% 
-                    dplyr::select(type = predator_class, pr_high_relative) %>% 
-                    group_by(type) %>% 
-                    summarise(med_val = median(pr_high_relative), sd = sd(pr_high_relative), 
-                              n = n()) %>%       
-                    mutate(group = "Predator guild")
+                group_by(type = predator_guild) %>% 
+                drop_na(type) %>% #drop prey values
+                summarise(med_val = median(diurnal_shift), 
+                          sd = sd(diurnal_shift), n = n()) %>% 
+                mutate(group = "Predator guild")
 
 prey_order <- data %>% 
-                dplyr::select(type = prey_order, py_high_relative) %>%
-                group_by(type) %>% 
-                summarise(med_val = median(py_high_relative), sd = sd(py_high_relative), n = n()) %>% 
+                group_by(type = prey_order) %>% 
+                drop_na(type) %>% #drop predator values
+                summarise(med_val = median(diurnal_shift), 
+                          sd = sd(diurnal_shift), n = n()) %>% 
                 mutate(group = "Prey order")
 ```
-```{r}
-functional_traits <- rbind(pred_prey, prey_order, predator_guild, hunting_mode) %>% 
-                        mutate(ci_high = med_val+sd, 
-                               ci_low = med_val-sd, 
-                               group = factor(group, levels = c("Trophic position", "Predator guild", 
-                                                                "Hunting mode", "Prey order")),
-                               n = paste0("n = ", n),
-                               type = str_to_title(type),
-                               type = factor(type, levels = c("Prey", "Predator", 
-                                                                   "Mesocarnivore","Apex", 
-                                                                   "Other", "Ungulate", "Rodent",
-                                                                   "Primate","Lagomorph", "Marsupial",
-                                                                   "Opportunistic","Cursorial","Ambush")))
 
-fig_4a <- ggplot(functional_traits, aes(y = type, x = med_val, xmin = ci_low, xmax = ci_high)) +
+```{r}
+#calculate confidence intervals and order variables for plotting
+
+functional_traits <- rbind(trophic_position, predator_guild, hunting_mode, prey_order) %>% 
+                     mutate(ci_low = med_val - sd, 
+                            ci_high = med_val + sd,
+                            group = factor(group, levels = c("Trophic position", "Predator guild", 
+                                                             "Predator hunting mode", "Prey order")),
+                            type = factor(type, levels = c("Prey", "Predator", 
+                                                           "Mesocarnivore","Apex", 
+                                                           "Other", "Ungulate", "Rodent",
+                                                           "Primate","Lagomorph", "Marsupial",
+                                                           "Opportunistic","Cursorial", "Ambush")))
+
+functional_traits2 <- rbind(trophic_level, bodysize, circadian_rhythm) %>% 
+                     mutate(ci_low = med_val - sd, 
+                            ci_high = med_val + sd,
+                            group = factor(group, levels = c("Trophic level","Body size (kg)", 
+                                                             "Circadian rhythm")),
+                            type = factor(type, levels = c("Herbivore","Omnivore", "Carnivore",
+                                                           "> 100 kg","50-100 kg", "10-50 kg","< 10 kg",                                                                     "Nocturnal","Crepuscular","Diurnal")))
+```
+
+
+
+
+```{r}
+#create plot panel without colors
+
+fig_S1a <- ggplot(functional_traits, aes(y = type, x = med_val, xmin = ci_low, xmax = ci_high)) +
             geom_vline(xintercept=0, color="grey60",linetype="dashed") +
             geom_point(color = "grey40") +
             geom_errorbarh(height = .1,color = "grey40") +
             scale_x_continuous(limits=c(-1,1),breaks=c(-1.5,-1,-0.5,0,.5,1))+
             facet_grid(group ~ ., scales = "free", space = "free") +
             theme_bw() +
-            xlab("Median Shift in Activity") +
+            xlab("Median Change in Diurnality") +
             ylab("") +
             theme(strip.text.y = element_text(angle = 0),
                   text=element_text(size=10, family="serif"), 
                     panel.grid.minor = element_blank(),
                     panel.grid.major = element_blank()) +
-            geom_text(aes(x = 0.75, label = n), family = "serif", size = 2.5, hjust = 0)
+            geom_text(aes(x = 0.5, label = paste0("n = ", n)), family = "serif", size = 2.5, hjust = 0)
 ```
 
 ```{r}
-functional_traits2 <- rbind(bodysize, trophic_level, activity) %>% 
-                        mutate(ci_high = med_val+sd, 
-                               ci_low = med_val-sd,
-                               n = paste0("n = ", n),
-                               group = factor(group, levels = c("Trophic level","Body mass", "Circadian rhythm")),
-                               type = factor(type, levels = c("> 100 kg","50-100 kg", "10-50 kg","< 10 kg",
-                                                              "Herbivore","Omnivore", "Carnivore",                                                                                    "Nocturnal","Crepuscular","Diurnal",)))
+#create plot panel with colors
 
-fig_4b <- ggplot(functional_traits2, aes(y = type, x = med_val, 
-                                          xmin = ci_low, xmax = ci_high, color = as.factor(name))) +
+fig_S1b <- ggplot(functional_traits2, aes(y = type, x = med_val, 
+                                          xmin = ci_low, xmax = ci_high, color = as.factor(trophic_position))) +
               geom_vline(xintercept=0, color="grey60",linetype="dashed") +
               geom_point(position=position_dodge(width= -.5)) +
               geom_errorbarh(height = .1, position=position_dodge(width=-.5)) +
-              scale_color_manual(values = c("predator" = "#FFC30B","prey" = "#87CBBB")) +
+              scale_color_manual(values = c("Predator" = "#FFC30B","Prey" = "#87CBBB")) +
               scale_x_continuous(limits=c(-1,1),breaks=c(-1.5,-1,-0.5,0,.5,1))+
               facet_grid(group ~ ., scales = "free", space = "free") +
               theme_bw() +
-              xlab("Median Shift in Activity") +
+              xlab("Median Change in Diurnality") +
               ylab("") +
               theme(strip.text.y = element_text(angle = 0),
                     text=element_text(size=10, family="serif"), 
@@ -161,13 +155,15 @@ fig_4b <- ggplot(functional_traits2, aes(y = type, x = med_val,
                     legend.key = element_rect(fill = "transparent", colour = "transparent"), 
                     panel.grid.minor = element_blank(),
                     panel.grid.major = element_blank()) +
-              geom_text(aes(x = 0.75, label = n), position = position_dodge(width = -.7), 
+              geom_text(aes(x = 0.5, label = paste0("n = ", n)), position = position_dodge(width = -.7), 
                         family = "serif", size = 2.5, hjust = 0)
 ```
 
-```{r}
-fig4 <- plot_grid(fig_4a, fig_4b)
-
-#ggsave("figure4.png", fig4, height = 5, width = 8, units = "in", dpi = 600)
+```{r fig2, fig.height = 4, fig.width = 6.5, dpi = 300}
+# Plot both figures
+fig_S1 <- cowplot::plot_grid(fig_S1a, fig_S1b)
+fig_S1
+#ggsave("figure_S1.png", figure2, height = 4, width = 6.5, units = "in", dpi = 600)
 ```
+**Fig. S1.** *The influence of functional traits on the difference in percent diurnal activity for terrestrial mammal predators and prey between sites of high and low human use (n = 49 predators, n = 76 prey, 19 studies).*
 

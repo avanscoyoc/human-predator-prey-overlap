@@ -1,5 +1,5 @@
 ---
-title: "VanScoyoc_et_al_plotting_results"
+title: "VanScoyoc et al. - Figure 2"
 output: github_document
 ---
 
