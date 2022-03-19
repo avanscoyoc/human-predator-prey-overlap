@@ -66,7 +66,7 @@ plot_colors <- factor(c("#D6AEF8","#EDF7B5","#EDF7B5","#D6AEF8"))
 fig2a <- ggplot() +
         #Add data
             geom_line(data = fig2a_data, aes(x=prey, y=predator, #add lines grouped by pair_id 
-                                             group = pair_ID), color = "#3D3D3D") +
+                                             group = pair_ID), color = "grey60") +
             geom_point(data = fig2a_data, aes(x=prey, y=predator), alpha = 0.7) + #add points   
             geom_label(data = plot_labels, aes(x = x, y = y, #add behavioral response pathway 
                                                label = name,
@@ -83,6 +83,7 @@ fig2a <- ggplot() +
             coord_fixed() + #fix plot dimensions
             theme_light() + #set theme
             theme(text=element_text(size=10, family="serif")) #set text size & font
+fig2a
 ```
 
 ```{r}
