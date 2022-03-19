@@ -77,8 +77,8 @@ fig2a <- ggplot() +
             scale_fill_manual(values = c("#EDF7B5","#D6AEF8")) + #fill labels with theme colors
             guides(fill="none", alpha="none") + #remove fill legend
             labs(x = "Prey Activity Response", y = "Predator Activity Response") + #label axes
-            geom_vline(xintercept = 0) + #set x-axis line
-            geom_hline(yintercept = 0) + #set y-axis line
+            geom_vline(xintercept = 0, linetype='dashed') + #set x-axis line
+            geom_hline(yintercept = 0, linetype='dashed') + #set y-axis line
             lims(x=c(-1,1),y=c(-1,1)) + #set axis limits
             coord_fixed() + #fix plot dimensions
             theme_light() + #set theme
