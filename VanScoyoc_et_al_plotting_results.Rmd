@@ -55,7 +55,7 @@ fig2a_data <- data %>% #call dataset
 # Fig 2a Plot
 
 # Behavioral response pathway labels for plot 
-plot_labels <- data.frame(name = c("Prey Switching", "Mutual Attraction", 
+plot_labels <- data.frame(name = c("Predator Attraction", "Mutual Attraction", 
                                    "Mutual Avoidance", "Prey Refuge"),
                           x = c(-0.75, 0.75, -0.75, 0.75), 
                           y = c(0.82, 0.82, -0.92, - 0.92))
@@ -93,7 +93,7 @@ fig2b_data <- data %>% #call dataset
                        py_shift_diurnal = py_high_D_AR - py_low_D_AR, #prey change in diurnality
                        hypothesis = ifelse(pr_shift_diurnal < 0 & py_shift_diurnal < 0, "Mutual Avoidance", 
                                   ifelse(pr_shift_diurnal > 0 & py_shift_diurnal > 0, "Mutual Attraction",
-                                    ifelse(pr_shift_diurnal > 0 & py_shift_diurnal < 0, "Prey Switching",
+                                    ifelse(pr_shift_diurnal > 0 & py_shift_diurnal < 0, "Predator Attraction",
                                       ifelse(pr_shift_diurnal < 0 & py_shift_diurnal > 0, "Prey Refuge", 
                                              "Neutral"))))) %>% 
                 dplyr::select(reference, pair_ID, #select columns for plotting
@@ -114,9 +114,9 @@ model_means_cld <- cld(object = model_means, #add letters to each mean
 
 ```{r}
 # Behavioral response pathway labels for plot 
-plot_labels2 <- data.frame(name = c("Prey Refuge", "Prey Switching",
+plot_labels2 <- data.frame(name = c("Prey Refuge", "Predator Attraction",
                                     "Mutual Avoidance", "Mutual Attraction"),
-                           y = c(-0.25,-0.25,0.28, 0.28), 
+                           y = c(-0.27,-0.27,0.28, 0.28), 
                            x = c(1.3,2.3,3.3,4.3))
 
 plot_colors2 <- factor(c("#D6AEF8","#D6AEF8","#EDF7B5","#EDF7B5"))
@@ -126,7 +126,7 @@ plot_colors2 <- factor(c("#D6AEF8","#D6AEF8","#EDF7B5","#EDF7B5"))
 fig2b <- ggplot() +
       #Add data
           geom_point(data = fig2b_data, aes(y = change_overlap, x = fct_relevel(hypothesis, 
-            "Prey Refuge","Prey Switching","Mutual Avoidance","Mutual Attraction")), #add points
+            "Prey Refuge","Predator Attraction","Mutual Avoidance","Mutual Attraction")), #add points
             shape = 16, alpha = 0.5, position = position_nudge(x = -0.2)) +
           geom_boxplot(data = fig2b_data, aes(y = change_overlap, x = hypothesis), #add boxplot
             width = 0.2, outlier.shape = NA, position = position_nudge(x = 0)) +
@@ -160,7 +160,7 @@ figure2 <- plot_grid(fig2a, fig2b, labels = "AUTO", label_size = 12, #combine pl
                     align = "h", axis = "b", nrow = 1, rel_widths = c(3,1.7), 
                     hjust = c(0, -0.04))
 figure2
-#ggsave("figure2.png", figure2, height = 4, width = 6.5, units = "in", dpi = 600)
+ggsave("figure2.png", figure2, height = 4, width = 6.5, units = "in", dpi = 600)
 ```
 
 **Fig. 2.** *Human influence on predator-prey temporal activity and overlap based on review of camera trap studies between paired settings of low and high human use. (a) Humans altered diel activity in mammal predator-prey dyads via four major pathways: mutual attraction, mutual avoidance, prey refuge, and prey switching. Lines reflect the relative magnitude and direction of diel activity response toward nocturnality (-1) or diurnality (1) for each predator-prey dyad at paired settings of low and high human use (n = 178 predator-prey dyads, 19 studies). (b) Change in predator-prey temporal overlap between settings of low and high human use did not vary predictably with predator-prey activity responses (n = 167 predator-prey dyads, 16 studies). Similar predator-prey responses (i.e., prey refuge, prey switching) to humans did not result in increased overlap between dyads, likewise opposite predator-prey responses (i.e., mutual attraction, mutual avoidance) to humans did not result in decreased overlap between dyads as predicted. Black dots represent change in temporal overlap for each dyad. Red error bars represent estimated marginal means and  ± 95% confidence interval.*

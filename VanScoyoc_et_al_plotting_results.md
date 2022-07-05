@@ -1,6 +1,8 @@
 VanScoyoc et al. - Figure 2
 ================
 
+![](VanScoyoc_et_al_plotting_results_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
 ![](VanScoyoc_et_al_plotting_results_files/figure-gfm/fig2-1.png)<!-- -->
 
 **Fig. 2.** *Human influence on predator-prey temporal activity and
