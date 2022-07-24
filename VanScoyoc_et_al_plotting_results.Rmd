@@ -76,7 +76,9 @@ fig2a <- ggplot() +
           #Format plot
             scale_fill_manual(values = c("#EDF7B5","#D6AEF8")) + #fill labels with theme colors
             guides(fill="none", alpha="none") + #remove fill legend
-            labs(x = "Prey Activity Response", y = "Predator Activity Response") + #label axes
+            labs(x = "", y = "") +
+            #labs(x = "Prey (relative change in diurnal activity ratio)", 
+            #     y = "Predator (relative change in diurnal activity ratio)") + #label axes
             geom_vline(xintercept = 0, linetype='dashed') + #set x-axis line
             geom_hline(yintercept = 0, linetype='dashed') + #set y-axis line
             lims(x=c(-1,1),y=c(-1,1)) + #set axis limits
@@ -85,6 +87,27 @@ fig2a <- ggplot() +
             theme(text=element_text(size=10, family="serif")) #set text size & font
 fig2a
 ```
+
+```{r}
+# Figure 2a descriptive results
+
+#Number of points per quadrant
+fig2a_descriptive <- fig2a_data %>% #call dataset
+    mutate(hypothesis = ifelse(predator < 0 & prey < 0, "Mutual Avoidance", 
+                           ifelse(predator > 0 & prey > 0, "Mutual Attraction",
+                             ifelse(predator > 0 & prey < 0, "Predator Attraction",
+                                ifelse(predator < 0 & prey > 0, "Prey Refuge", 
+                                       "Neutral"))))) %>% 
+  filter(human_activity == "high") %>% 
+  group_by(hypothesis) %>% 
+  summarize(n = n()) %>% 
+  mutate(percent = n/178*100)
+
+fig2a_descriptive
+```
+
+
+
 
 ```{r}
 # Tidy data for Figure2b
@@ -111,6 +134,23 @@ model_means <- emmeans(object = model, specs = "hypothesis") #get adjusted weigh
 model_means_cld <- cld(object = model_means, #add letters to each mean
                        adjust = "Tukey", Letters = letters, alpha = 0.05)
 ```
+
+```{r}
+# Figure 2b descriptive results
+
+# Percent of predator or prey with increased overlap
+fig2b_data %>% 
+  mutate(direction_overlap = ifelse(change_overlap < 0, "decrease", 
+                                ifelse(change_overlap > 0, "increase", "no_change"))) %>% 
+  group_by(hypothesis, direction_overlap) %>% 
+  summarize(n = n()) %>% 
+  pivot_wider(names_from = direction_overlap, values_from = n) %>% 
+  mutate(total = sum(increase,decrease),
+         perc_increase = increase/total*100,
+         perc_decrease = decrease/total*100)
+```
+
+
 
 ```{r}
 # Behavioral response pathway labels for plot 
@@ -156,7 +196,7 @@ fig2b <- ggplot() +
 
 ```{r fig2, fig.height = 4, fig.width = 6.5, dpi = 300}
 # Combine Figure 2 plots
-figure2 <- plot_grid(fig2a, fig2b, labels = "AUTO", label_size = 12, #combine plots
+figure2 <- plot_grid(fig2a, fig2b, label_size = 12, #combine plots
                     align = "h", axis = "b", nrow = 1, rel_widths = c(3,1.7), 
                     hjust = c(0, -0.04))
 figure2
