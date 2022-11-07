@@ -165,5 +165,5 @@ fig_S1 <- cowplot::plot_grid(fig_S1a, fig_S1b)
 fig_S1
 #ggsave("figure_S1.png", figure2, height = 4, width = 6.5, units = "in", dpi = 600)
 ```
-**Fig. S1.** *The influence of functional traits on the difference in percent diurnal activity for terrestrial mammal predators and prey between sites of high and low human use (n = 49 predators, n = 76 prey, 19 studies).*
+**Fig. 3.** *The influence of functional traits on the change in diurnal activity of terrestrial mammals, based on a review of paired camera trap studies. The change in diurnal activity ratio was calculated between paired settings of low and high human activity for each species in each study (n = 49 predators, n = 76 prey, 19 studies).*
 
