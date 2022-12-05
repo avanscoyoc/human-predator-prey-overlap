@@ -1,9 +1,6 @@
 # R script, plots, and data used to assess how human activity influences predator-prey activity and overlap
-<<<<<<< HEAD
+
 ##### Van Scoyoc, A., Smith, J.A., Gaynor, K.M, Barker, K., Brashares, J.S. Accepted. The influence of human activity on predator-prey interactions. Journal of Animal Ecology. 
-=======
-##### Van Scoyoc, A., Smith, J.A., Gaynor, K.M, Barker, K., Brashares, J.S. In Prep. The influence of human activity on predator-prey spatiotemporal overlap.
->>>>>>> dfc563c2f11546b4bb4accc9a8aa0833ba0ce82a
 
 ## **Authors**
 
