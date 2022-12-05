@@ -1,51 +1,56 @@
 ## Definition of column names in *VanScoyoc_et_al_fulldata.csv*
 
 ### *Predator-prey dyads & functional traits*
-**pair_ID** -  	
-**reference** -  	
-**predator_common** -  	
-**predator_species** -  	
-**predator_trophic_level** -  	
-**predator_class** -  	
-**predator_mass_kg** -  	
-**predator_mass_category** -  	
-**predator_activity_pattern** -  	
-**predator_hunting_mode** -  	
-**prey_common** -  	
-**prey_species** -    	
-**prey_trophic_level** -  	
-**prey_order** -  	
-**prey_mass_kg** -  	
-**prey_mass_category** -  	
-**prey_activity_pattern** -  	
+
+- **pair_ID** -unique ID given to each predator-prey dyad in each study  	
+- **reference** -study citation abbreviation and year
+- **predator_common** -common name
+- **predator_species** -taxanomic species name  	
+- **predator_trophic_level** -trophic level in ecological community, best guess as described in paper  	
+- **predator_class** - predator guild  	
+- **predator_mass_kg** -mass in kilograms (Encyclopedia of Life, Parr et al. 2014)  	
+- **predator_mass_category** -binned mass in kilograms   	
+- **predator_activity_pattern** -circadian rhythm (Encyclopedia of Life, Parr et al. 2014)  	
+- **predator_hunting_mode** -hunting mode (expert advice, Encyclopedia of Life, Parr et al. 2014)  	
+- **prey_common** -common name  	
+- **prey_species** -taxanomic species name    	
+- **prey_trophic_level** -trophic level in ecological community, best guess as described in paper  	
+- **prey_order** -taxanomic order name  	
+- **prey_mass_kg** -mass in kilograms (Encyclopedia of Life, Parr et al. 2014)	
+- **prey_mass_category** - binned mass in kilograms  	
+- **prey_activity_pattern** -circadian rhythm (Encyclopedia of Life, Parr et al. 2014)   	
 
 
 ### *Predator-prey temporal overlap data*
-**overlap_low** -  	
-**CI_low_low** -  	
-**CI_low_upper** -  	
-**overlap_high** -  	
-**CI_high_low** -  	
-**CI_high_upper** -  	
-**overlap_significance** -  	
-**change_overlap** -  
+
+- **overlap_low** -overlap coefficient in low human use setting  	
+- **CI_low_low** -lower confidence interval of overlap coefficient (low human use setting)  	
+- **CI_low_upper** -upper confidence interval of overlap coefficient (low human use setting) 	
+- **overlap_high** -overlap coefficient in high human use setting	
+- **CI_high_low** -lower confidence interval of overlap coefficient (high human use setting)  	
+- **CI_high_upper** -upper confidence interval of overlap coefficient (high human use setting)  	
+- **change_overlap** - change in overlap is `overlap_high` - `overlap_low`
 
 ### *Predator-prey diel activity data*
-**predator_AR_low** -  	
-**prey_AR_low** -  	
-**predator_AR_high** -  	
-**prey_AR_high** -  	
-**shift_addto_predator** -  	
-**shift_addto_prey** -  	
-**predator_low_normalized** -  	
-**prey_low_normalized** -  	
-**predator_high_normalized** -  	
-**prey_high_normalized** -  	
+*The relevant metric is the `diurnal activity ratio`, taken as the proportion of daytime images for a species at a low/high setting of human use (based on suntime).*
+
+- **pr_D_low_count** -predator, number of daytime images, low human use setting 	
+- **pr_N_low_count** -predator, number of nighttime images, low human use setting   	
+- **pr_low_total** -predator, total images, low human use setting   		
+- **pr_low_D_AR** -predator diurnal activity ratio (`pr_D_low_count` / `pr_low_total`)
+- **pr_low_N_AR** -predator nocturnal activity ratio (`pr_N_low_count` / `pr_low_total`)
+
+- **pr_D_high_count** -predator, number of daytime images, high human use setting 	
+- **pr_N_high_count** -predator, number of nighttime images, high human use setting   	
+- **pr_high_total** -predator, total images, high human use setting   		
+- **pr_high_D_AR** -predator diurnal activity ratio (`pr_D_high_count` / `pr_high_total`)
+- **pr_high_N_AR** -predator nocturnal activity ratio (`pr_N_high_count` / `pr_high_total`)
+
+- **py_** -all of the same columns are replicated for prey, abbreviated as `py`
 
 ### *Behavioral response pathway assignment*
-**predator_response** -  	
-**prey_response** -  	
-**hypothesis** -  
+
+- **hypothesis** -indicates whether the unique predator-prey dyad responses reflected `Mutual Avoidance`, `Mutual Attraction`, `Prey refuge`, or `Predator attraction`  
 
 ## Literature Search
 Original Web of Science Search (n=4,675) for 2000-2020 (completed on May 13th, 2020)	
