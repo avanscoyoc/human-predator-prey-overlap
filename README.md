@@ -62,3 +62,4 @@ metadata -
 
 * **VanScoyoc_et_al_metadata.md** - This file defines the column names in the *VanScoyoc_et_al_fulldata.csv* file and how each data column was calculated. 
 
+Note: Launch the **human-predator-prey-overlap.Rproj** file first to ensure that all data folders are loaded properly into the working directory for the scripts to run. 
