@@ -37,14 +37,16 @@ brashares@berkeley.edu
 
 ### File list
 
-**human-predator-prey-overlap.Rproj**
-**VanScoyoc_et_al_Figure2.Rmd**
-**VanScoyoc_et_al_Figure3.Rmd**
+* **human-predator-prey-overlap.Rproj**
+* **VanScoyoc_et_al_Figure2.Rmd**
+* **VanScoyoc_et_al_Figure3.Rmd**
+
 data - 
-**VanScoyoc_et_al_data.csv**
+* **VanScoyoc_et_al_data.csv**
+
 metadata -
-**VanScoyoc_et_al_table1.xlsx**
-**VanScoyoc_et_al_metadata.md**
+* **VanScoyoc_et_al_table1.xlsx**
+* **VanScoyoc_et_al_metadata.md**
 
 ### File descriptions
 
